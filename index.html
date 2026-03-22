@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Clock In App</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-2: #16a34a;
+      --danger: #dc2626;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 18px 14px 40px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-top: 14px;
+    }
+
+    h1 {
+      margin: 4px 0 8px;
+      font-size: 1.6rem;
+      line-height: 1.2;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      margin-top: 12px;
+      font-size: 0.98rem;
+    }
+
+    .status.in {
+      background: #e8f7ed;
+      color: #166534;
+    }
+
+    .status.out {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .big-time {
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin: 10px 0 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 14px;
+      padding: 15px 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.05s ease, opacity 0.2s ease;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    .primary {
+      background: var(--accent-2);
+      color: white;
+    }
+
+    .secondary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .ghost {
+      width: 100%;
+      margin-top: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .danger {
+      background: #fff1f2;
+      color: var(--danger);
+      border: 1px solid #fecdd3;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 10px;
+    }
+
+    ul.log {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .log li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.97rem;
+    }
+
+    .log li:last-child { border-bottom: none; }
+
+    .tag {
+      font-size: 0.84rem;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .tag.in {
+      background: #e8f7ed;
+      color: #166534;
+    }
+
+    .tag.out {
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 10px 0 4px;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 420px) {
+      .big-time { font-size: 2rem; }
+      .btns { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <p class="sub">Phone-friendly mini app</p>
+      <h1>Clock In / Out</h1>
+      <div id="statusBadge" class="status out">Currently clocked out</div>
+      <div id="clock" class="big-time">--:--:--</div>
+      <div id="todayDate" class="date"></div>
+
+      <div class="btns">
+        <button class="primary" onclick="clockIn()">Clock In</button>
+        <button class="secondary" onclick="clockOut()">Clock Out</button>
+      </div>
+
+      <button class="ghost danger" onclick="resetToday()">Reset today's log</button>
+      <div class="small">Saves on your phone in this browser using local storage.</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 10px; font-size:1.15rem;">Today's log</h2>
+      <ul id="logList" class="log"></ul>
+      <div id="emptyState" class="empty">No entries yet today.</div>
+    </div>
+
+    <div class="footer">Tip: add this page to your home screen for quick access.</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "simple_clock_in_app_v1";
+
+    function getTodayKey() {
+      const now = new Date();
+      return now.getFullYear() + "-" +
+        String(now.getMonth() + 1).padStart(2, "0") + "-" +
+        String(now.getDate()).padStart(2, "0");
+    }
+
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { days: {}, status: "out" };
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return { days: {}, status: "out" };
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function formatTime(iso) {
+      return new Date(iso).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function formatLongDate() {
+      return new Date().toLocaleDateString([], {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
+    }
+
+    function addEntry(type) {
+      const data = loadData();
+      const today = getTodayKey();
+      if (!data.days[today]) data.days[today] = [];
+      data.days[today].push({
+        type,
+        at: new Date().toISOString()
+      });
+      data.status = type === "in" ? "in" : "out";
+      saveData(data);
+      render();
+    }
+
+    function clockIn() { addEntry("in"); }
+    function clockOut() { addEntry("out"); }
+
+    function resetToday() {
+      const data = loadData();
+      const today = getTodayKey();
+      data.days[today] = [];
+      data.status = "out";
+      saveData(data);
+      render();
+    }
+
+    function render() {
+      const data = loadData();
+      const today = getTodayKey();
+      const entries = data.days[today] || [];
+
+      document.getElementById("todayDate").textContent = formatLongDate();
+
+      const badge = document.getElementById("statusBadge");
+      badge.className = "status " + (data.status === "in" ? "in" : "out");
+      badge.textContent = data.status === "in" ? "Currently clocked in" : "Currently clocked out";
+
+      const logList = document.getElementById("logList");
+      const emptyState = document.getElementById("emptyState");
+      logList.innerHTML = "";
+
+      if (!entries.length) {
+        emptyState.style.display = "block";
+      } else {
+        emptyState.style.display = "none";
+        entries.slice().reverse().forEach(entry => {
+          const li = document.createElement("li");
+
+          const left = document.createElement("div");
+          left.innerHTML = "<strong>" + formatTime(entry.at) + "</strong>";
+
+          const right = document.createElement("div");
+          right.className = "tag " + entry.type;
+          right.textContent = entry.type === "in" ? "Clock in" : "Clock out";
+
+          li.appendChild(left);
+          li.appendChild(right);
+          logList.appendChild(li);
+        });
+      }
+    }
+
+    function tickClock() {
+      document.getElementById("clock").textContent = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    tickClock();
+    setInterval(tickClock, 1000);
+    render();
+  </script>
+</body>
+</html>
